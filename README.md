@@ -29,7 +29,7 @@ This code is highly experimental, and I recommend to not imitate it.
 ## Usage
 ```
 $ python3 transpiler.py --help
-usage: transpiler.py [-h] [-o output_file] [-es] input_filename
+usage: transpiler.py [-h] [-o output_file] [-k40] [-m2] input_filename
 
 Transpile MAT-4 to C.
 
