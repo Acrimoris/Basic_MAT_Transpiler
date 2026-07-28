@@ -23,7 +23,7 @@ This code is highly experimental, and I recommend to not imitate it.
 - Operations on absolute addresses
 - `SPECJALNE`, `ADRES A DO B` and `ROZDZIAL` instructions
 - Keys checking
-- Functions are only supported as standalone statments e. g. `A = COS B`
+- Functions are only supported as standalone statements e. g. `A = COS B`
 - Printed numbers aren't always formatted exactly correctly
 
 ## Usage
