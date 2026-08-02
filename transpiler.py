@@ -31,7 +31,7 @@ def is_number(number: str) -> bool:
 def convert(text: str) -> str:
     # T
     if len(text) == 1 and text.isalpha():
-        return f"*({text})"
+        return f"(*({text}))"
     letter = text[0]
     i = 1
     # Read first number
@@ -41,7 +41,7 @@ def convert(text: str) -> str:
         i += 1
     # B10
     if i == len(text):
-        return f"*({letter} + {number})"
+        return f"(*({letter} + {number}))"
     # B11B10
     if text[i].isalpha() and "(" not in text:
         letter2 = text[i]
@@ -51,20 +51,20 @@ def convert(text: str) -> str:
             number2 += text[i]
             i += 1
         if number != "" and number2 != "":
-            return f"*({letter} + {number} + (int)*({letter2} + {number2}))"
+            return f"(*({letter} + {number} + (int)*({letter2} + {number2})))"
         elif number == "" and number2 != "":
-            return f"*({letter} + (int)*({letter2} + {number2}))"
+            return f"(*({letter} + (int)*({letter2} + {number2})))"
         elif number == "" and number2 == "":
-            return f"*({letter} + (int)*({letter2}))"
+            return f"(*({letter} + (int)*({letter2})))"
         elif number != "" and number2 == "":
-            return f"*({letter} + {number} + (int)*({letter2}))"
+            return f"(*({letter} + {number} + (int)*({letter2})))"
 
     # A2(...)
     if text[i] == "(":
         inner = convert_expression(text[i + 1:-1])
         if number:
-            return f"*({letter} + {number} + (int)({inner}))"
-        return f"*({letter} + (int)({inner}))"
+            return f"(*({letter} + {number} + (int)({inner})))"
+        return f"(*({letter} + (int)({inner})))"
     return text
 
 
@@ -434,6 +434,8 @@ def loop_inst(instruction, loop_labels, label_number: int = -1) -> str:
             result = f"if (loop_check({variable},{loop_end},{loop_step})) {{\n"
             result +=f"{variable} = {variable} + ({loop_step});\n"
             result +=f"goto {label}; }}\n"
+        else:
+            raise SyntaxError("Incorrect loop syntax")
         return result, ""
     label = [f"LOOP{label_number}"]
     instruction = instruction[2:]
@@ -507,7 +509,7 @@ def read_inst(instruction, use_encoding: bool = False) -> str:
             for i in result[1:]:
                 variable.append(parse_expression(i))
             result = result[0]
-        main_variable = parse_expression(result)[1:]
+        main_variable = parse_expression(result)[2:-1]
         condition = f"((ch == {variable[0]})"
         for i in variable[1:]:
             condition += f" || (ch == {i})"
@@ -640,7 +642,7 @@ def write_inst(instruction, use_encoding: bool = False) -> str:
         variable = ""
         for i in instruction[2:]:
             variable += i[1]
-        variable = parse_expression(variable)[1:]
+        variable = parse_expression(variable)[2:-1]
         encodings = []
         encodings += ((["((*ptr >> ((5-i) * 7)) & 0177)", "ch", "055"] * (not use_encoding))
                       + (["((*ptr >> ((5-i) * 6)) & 077)", "decode[ch]", "030"] * use_encoding))
@@ -754,7 +756,7 @@ def transpile(input_file, output_file, klucz_40, use_encoding):
     # ABS function and loop condition checking
     output_file.writelines("double absd(double x) { return (x < 0.0f) ? -x : x; }\n")
     output_file.writelines("int check_int(long int a, long int d, long int c) { (void)c; return a != d; }\n")
-    output_file.writelines("int check_double(double a, long int d, long int c) { return absd(d - a) >= absd(c / 2.0); }\n")
+    output_file.writelines("int check_double(double a, double d, double c) { return absd(d - a) >= absd(c / 2.0); }\n")
     output_file.writelines("#define loop_check(a, d, c) _Generic((a), long int: check_int, double: check_double)(a, d, c)\n")
     # Output functions
     output_file.writelines("void print_int(long int x) { printf(\"%ld\", x); }\n")

@@ -2,7 +2,7 @@ Basic MAT-4 Transpiler
 ======================
 
 ## MAT-4 Transpiler
-A tiny and basic transpiler for the MAT-4 language. Transpiles MAT-4 code to C. I don't really have access to any MAT-4 manual, so this is in large based on my extrapolation of rules.
+A tiny and basic transpiler for the MAT-4 language. Transpiles MAT-4 code to C. I don't really have access to any MAT-4 manual, so this is in large part based on my extrapolation of rules.
 
 This is a very small project to experiment with this interesting language. It is intentionally simple, and probably won't get any updates.
 
