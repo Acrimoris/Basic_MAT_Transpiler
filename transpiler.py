@@ -314,7 +314,7 @@ def instructions(instruction) -> str:
     result = result.split("=")
     result[1] = result[1].split(":")
     operation = ("<<" * result[0].startswith("LEWO") + ">>" * result[0].startswith("PRAW")
-                + "|" * result[0].startswith("KONI"))
+                + "&" * result[0].startswith("KONI"))
     result[0] = result[0].split(" ")[1]
     result = (parse_expression(result[0]) + "=" + parse_expression(result[1][0])
               + operation + parse_expression(result[1][1]) + ";\n")
@@ -395,18 +395,18 @@ def jump_inst(instruction, label_number: int) -> str:
 # - WROC
 def subroutine_inst(instruction, label_number: int = -1) -> str:
     if instruction[0][1] == "WROC":
-        return "longjmp(podpr_env, 1);\n"
+        return "longjmp(podpr_env[sp], 1);\n"
     result = instruction[2][1]
     if is_number(result):
-        return "if (setjmp(podpr_env) == 0) { goto _"+result+"; }\n"
+        return "++sp; if (setjmp(podpr_env[sp]) == 0) { goto _"+result+"; } --sp;\n"
     elif label_number == -1:
-        return "//if (setjmp(podpr_env) == 0) { goto "+result+"; }\n"
+        return "//if (setjmp(podpr_env[sp]) == 0) { goto "+result+"; }\n"
     # Label number is known, and we jump to a variable
     result = parse_expression(result)
-    result = f"if (setjmp(podpr_env) == 0) {{ switch ({result}) {{"
+    result = f"++sp; if (setjmp(podpr_env[sp]) == 0) {{ switch ({result}) {{"
     for i in range(1, label_number):
         result += f" case {i}: goto _{i}; "
-    result += "} }\n"
+    result += "} } --sp;\n"
     return result
 
 # Handle loop instructions:
@@ -748,7 +748,8 @@ def transpile(input_file, output_file, klucz_40, use_encoding):
     output_file.writelines("#include <stdio.h>\n")
     output_file.writelines("#include <setjmp.h>\n")
     # Set the jump variable
-    output_file.writelines("jmp_buf podpr_env;\n")
+    output_file.writelines("jmp_buf podpr_env[384];\n")
+    output_file.writelines("volatile int sp = -1;\n")
     # Swap functions for ZAMIEN
     output_file.writelines("void swap_int(long int *a, long int *b) { long int temp = *a; *a = *b; *b = temp; }\n")
     output_file.writelines("void swap_double(double *a, double *b) { double temp = *a; *a = *b; *b = temp; }\n")
@@ -774,7 +775,7 @@ def transpile(input_file, output_file, klucz_40, use_encoding):
     current_index += 2 * use_encoding
     # int main()
     output_file.writelines("int main() {\n")
-    current_index += 17
+    current_index += 18
     for line in input_file:
         # Tokenise each line
         tokens = tokenise(line, operations_list, operations_dict)
